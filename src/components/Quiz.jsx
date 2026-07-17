@@ -5,11 +5,15 @@ import Layout from './Layout';
 export default function Quiz({ quiz, onComplete }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [locked, setLocked] = useState(false);
 
   const handleAnswer = (type, text) => {
+    if (locked) return;
+    setLocked(true);
     const newAnswers = { ...answers, [currentQuestion]: { type, text } };
     setAnswers(newAnswers);
     setTimeout(() => {
+      setLocked(false);
       if (currentQuestion < quiz.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
       } else {
@@ -64,6 +68,7 @@ export default function Quiz({ quiz, onComplete }) {
                 <button
                   key={option.text}
                   onClick={() => handleAnswer(option.type, option.text)}
+                  disabled={locked}
                   className={`p-6 rounded-full border border-gray-300 font-semibold text-lg transition-all duration-300 ${
                     isSelected
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
@@ -76,6 +81,7 @@ export default function Quiz({ quiz, onComplete }) {
             })}
             <button
               onClick={() => handleAnswer('N/A', 'N/A')}
+              disabled={locked}
               className={`p-6 rounded-full border border-gray-300 font-semibold text-lg transition-all duration-300 sm:col-span-2 ${
                 current?.type === 'N/A'
                   ? 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
@@ -90,7 +96,7 @@ export default function Quiz({ quiz, onComplete }) {
         <div className="flex gap-4">
           <button
             onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
-            disabled={currentQuestion === 0}
+            disabled={currentQuestion === 0 || locked}
             className={`flex-1 py-4 rounded-full font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
               currentQuestion === 0
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { personalityDescriptions } from '../../data/personalities';
+
+// DB check constraints enforce valid types, but guard anyway so one bad row can't blank the dashboard
+const typeLabel = (type, pct) =>
+  `${personalityDescriptions[type]?.emoji ?? '❓'} ${type} (${pct}%)`;
 import { StatTile, TypeDistribution, ResponsesPerDay } from './Charts';
 
 function Login({ onError, error }) {
@@ -23,12 +27,12 @@ function Login({ onError, error }) {
         <p className="text-sm text-gray-500">Sign in to review quiz results.</p>
         <input
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
+          placeholder="Email" aria-label="Email"
           className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <input
           type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder="Password" aria-label="Password"
           className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -45,7 +49,11 @@ function Login({ onError, error }) {
 
 function exportCsv(rows) {
   const header = 'created_at,primary_type,primary_pct,secondary_type,secondary_pct,na_count\n';
-  const esc = (v) => `"${String(v).replace(/"/g, '""')}"`;
+  // prefix guards against spreadsheet formula injection (=,+,-,@)
+  const esc = (v) => {
+    const s = String(v).replace(/"/g, '""');
+    return `"${/^[=+\-@]/.test(s) ? `'${s}` : s}"`;
+  };
   const body = rows
     .map((r) => [r.created_at, r.primary_type, r.primary_pct, r.secondary_type, r.secondary_pct, r.na_count].map(esc).join(','))
     .join('\n');
@@ -76,6 +84,7 @@ export default function Admin() {
       .from('pose_results')
       .select('id, created_at, primary_type, primary_pct, secondary_type, secondary_pct, na_count')
       .order('created_at', { ascending: false })
+      .limit(2000)
       .then(({ data, error }) => {
         if (error) setLoadError(error.message);
         else setRows(data);
@@ -131,7 +140,7 @@ export default function Admin() {
           <StatTile label="Last 7 days" value={thisWeek} />
           <StatTile
             label="Most common type"
-            value={topType ? `${personalityDescriptions[topType].emoji} ${topType}` : '—'}
+            value={topType ? `${personalityDescriptions[topType]?.emoji ?? '❓'} ${topType}` : '—'}
           />
         </div>
 
@@ -157,10 +166,10 @@ export default function Admin() {
                       {new Date(r.created_at).toLocaleString()}
                     </td>
                     <td className="py-2 pr-4">
-                      {personalityDescriptions[r.primary_type].emoji} {r.primary_type} ({r.primary_pct}%)
+                      {typeLabel(r.primary_type, r.primary_pct)}
                     </td>
                     <td className="py-2 pr-4">
-                      {personalityDescriptions[r.secondary_type].emoji} {r.secondary_type} ({r.secondary_pct}%)
+                      {typeLabel(r.secondary_type, r.secondary_pct)}
                     </td>
                     <td className="py-2 tabular-nums">{r.na_count}</td>
                   </tr>

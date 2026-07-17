@@ -44,15 +44,18 @@ export function TypeDistribution({ counts, total }) {
   );
 }
 
+const localDay = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export function ResponsesPerDay({ rows }) {
   const days = [...Array(30)].map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (29 - i));
-    return d.toISOString().slice(0, 10);
+    return localDay(d);
   });
   const counts = Object.fromEntries(days.map((d) => [d, 0]));
   rows.forEach((r) => {
-    const day = r.created_at.slice(0, 10);
+    const day = localDay(new Date(r.created_at));
     if (day in counts) counts[day] += 1;
   });
   const max = Math.max(1, ...Object.values(counts));
