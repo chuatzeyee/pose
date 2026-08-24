@@ -48,14 +48,14 @@ function Login({ onError, error }) {
 }
 
 function exportCsv(rows) {
-  const header = 'created_at,primary_type,primary_pct,secondary_type,secondary_pct,na_count\n';
+  const header = 'created_at,source,primary_type,primary_pct,secondary_type,secondary_pct,na_count\n';
   // prefix guards against spreadsheet formula injection (=,+,-,@)
   const esc = (v) => {
     const s = String(v).replace(/"/g, '""');
     return `"${/^[=+\-@]/.test(s) ? `'${s}` : s}"`;
   };
   const body = rows
-    .map((r) => [r.created_at, r.primary_type, r.primary_pct, r.secondary_type, r.secondary_pct, r.na_count].map(esc).join(','))
+    .map((r) => [r.created_at, r.source, r.primary_type, r.primary_pct, r.secondary_type, r.secondary_pct, r.na_count].map(esc).join(','))
     .join('\n');
   const url = URL.createObjectURL(new Blob([header + body], { type: 'text/csv' }));
   const a = document.createElement('a');
@@ -82,7 +82,7 @@ export default function Admin() {
     if (!session) { setRows(null); return; }
     supabase
       .from('pose_results')
-      .select('id, created_at, primary_type, primary_pct, secondary_type, secondary_pct, na_count')
+      .select('id, created_at, source, primary_type, primary_pct, secondary_type, secondary_pct, na_count')
       .order('created_at', { ascending: false })
       .limit(2000)
       .then(({ data, error }) => {
@@ -154,6 +154,7 @@ export default function Admin() {
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-200">
                   <th className="py-2 pr-4 font-medium">Date</th>
+                  <th className="py-2 pr-4 font-medium">Source</th>
                   <th className="py-2 pr-4 font-medium">Primary</th>
                   <th className="py-2 pr-4 font-medium">Secondary</th>
                   <th className="py-2 font-medium">N/A</th>
@@ -165,6 +166,7 @@ export default function Admin() {
                     <td className="py-2 pr-4 text-gray-600 whitespace-nowrap tabular-nums">
                       {new Date(r.created_at).toLocaleString()}
                     </td>
+                    <td className="py-2 pr-4 text-gray-600">{r.source}</td>
                     <td className="py-2 pr-4">
                       {typeLabel(r.primary_type, r.primary_pct)}
                     </td>

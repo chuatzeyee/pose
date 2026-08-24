@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d dist",
+    "deploy:posetest": "POSE_BASE=/posetest/ VITE_VARIANT=posetest vite build && gh-pages -d dist -r https://github.com/chuatzeyee/posetest.git"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",

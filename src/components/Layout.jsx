@@ -1,4 +1,5 @@
 import TopBar from './TopBar';
+import { UNBRANDED } from '../lib/variant';
 
 export default function Layout({ children, maxWidth = 'max-w-3xl' }) {
   return (
@@ -7,7 +8,7 @@ export default function Layout({ children, maxWidth = 'max-w-3xl' }) {
       <div className={`${maxWidth} mx-auto`}>
         {children}
         <footer className="text-center mt-8 text-sm text-gray-500">
-          © 2025-2026 DSO National Laboratories, Leadership Development Office (LDO).
+          {UNBRANDED ? '© 2025-2026' : '© 2025-2026 DSO National Laboratories, Leadership Development Office (LDO).'}
         </footer>
       </div>
     </div>
